@@ -56,7 +56,81 @@ The scanner itself:
 
 ---
 
-## Installation
+## Running locally
+
+There are two ways to run the scanner on your own machine without a VPS, nginx, or SSL certificate.
+
+---
+
+### Option A — Dev server (fastest, UI testing only)
+
+No Docker. No PHP. Just Node.js.
+
+```bash
+git clone https://github.com/Gypsy-82/scanner.git
+cd scanner
+node dev-server.js
+```
+
+Open `http://localhost:3000` in your browser.
+Login password: `scanner123`
+
+The dev server mocks all six scan modules so you can navigate the full UI without making real network requests. Use this to review the interface or test frontend changes.
+
+---
+
+### Option B — Docker locally (full functionality, no nginx required)
+
+Full real scans — ClamAV, URLhaus checks, live site audits — running entirely on your machine. Skip nginx and Certbot entirely. You hit the container directly on port 8080.
+
+**Prerequisites:** Docker, Docker Compose, PHP CLI (for setup only)
+
+```bash
+git clone https://github.com/Gypsy-82/scanner.git
+cd scanner
+docker compose build
+```
+
+Create the config directory:
+
+```bash
+sudo mkdir -p /opt/scanner/logs
+sudo chmod 750 /opt/scanner
+echo '{}' | sudo tee /opt/scanner/rate_limits.json > /dev/null
+```
+
+Set your credentials:
+
+```bash
+sudo php setup.php
+# Enter your email, password (16+ chars), and any optional API keys
+
+sudo mv config.php /opt/scanner/config.php
+sudo chmod 640 /opt/scanner/config.php
+sudo rm setup.php
+```
+
+Start the container:
+
+```bash
+docker compose up -d
+```
+
+Open `http://localhost:8080` in your browser and log in.
+
+> No nginx. No SSL certificate. No domain needed. The container binds to `127.0.0.1:8080` so it's only reachable from your own machine.
+
+To stop it:
+
+```bash
+docker compose down
+```
+
+---
+
+## VPS / Cloud Installation
+
+Follow these steps when deploying to a remote server with a domain and SSL.
 
 ### Step 1 — Get the code onto your server
 
@@ -86,9 +160,6 @@ sudo chmod 750 /opt/scanner
 > They are never stored in plain text — only a salted, peppered bcrypt hash is written to `config.php`.
 
 ```bash
-# Navigate to where you cloned/downloaded the repo
-cd wp-scanner/scanner
-
 sudo php setup.php
 ```
 
