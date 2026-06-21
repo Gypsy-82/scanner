@@ -1,0 +1,20 @@
+# Never bake credentials or dev artifacts into the image
+config.php
+config.example.php
+setup.php
+rate_limits.json
+logs/
+memory.md
+
+# Dev tooling
+dev-server.js
+node_modules/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# OS
+.DS_Store
+Thumbs.db

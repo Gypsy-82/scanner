@@ -1,0 +1,46 @@
+Options -Indexes -FollowSymLinks -Includes -MultiViews
+ServerSignature Off
+
+RewriteEngine On
+
+# ── HTTPS enforcement ─────────────────────────────────────────
+# Behind nginx reverse proxy: nginx sends X-Forwarded-Proto.
+# If a request somehow bypasses nginx, X-Forwarded-Proto is absent
+# and %{HTTPS} off catches it.
+RewriteCond %{HTTP:X-Forwarded-Proto} =http [OR]
+RewriteCond %{HTTP:X-Forwarded-Proto} =""
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ── Block direct PHP access to API handlers ───────────────────
+# All API access must go through index.php's session-token router.
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^ - [F,L]
+
+# ── Block dotfiles ────────────────────────────────────────────
+RewriteRule (^|/)\. - [F,L]
+
+# ── Route all non-asset requests through index.php ────────────
+# This is the catch-all that lets the PHP session router handle
+# obfuscated token paths like /a3f9c84b12d0e7f2
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L]
+
+# ── Security headers ──────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always unset X-Powered-By
+    Header always unset Server
+    Header always set X-Content-Type-Options    "nosniff"
+    Header always set X-Frame-Options           "DENY"
+    Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+    Header always set Referrer-Policy           "no-referrer"
+    Header always set Permissions-Policy        "camera=(), microphone=(), geolocation=()"
+    Header always set Content-Security-Policy   "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'"
+</IfModule>
+
+# ── No caching on anything ────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set Cache-Control "no-store, no-cache, must-revalidate"
+    Header always set Pragma "no-cache"
+</IfModule>

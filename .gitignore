@@ -1,0 +1,15 @@
+# Generated config — contains hashed credentials
+config.php
+
+# Runtime state
+rate_limits.json
+logs/
+*.log
+
+# Dev tooling
+node_modules/
+rainbow.txt
+
+# OS
+.DS_Store
+Thumbs.db
